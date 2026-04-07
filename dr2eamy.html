@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>made for my puppy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400&display=swap');
+  :root {
+    --bg:#f7f4f0;--surface:#fff;--border:#e8e2da;
+    --accent:#b08a6e;--text:#2a2420;--muted:#9a8f87;--track:#e8e2da;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;padding:24px}
+  header{display:flex;align-items:baseline;gap:20px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:16px;flex-wrap:wrap}
+  header h1{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:44px;color:var(--accent);letter-spacing:2px;line-height:1}
+  header span{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase}
+  .layout{display:grid;grid-template-columns:1fr 290px;gap:20px;align-items:start}
+  @media(max-width:860px){.layout{grid-template-columns:1fr}}
+  .preview-area{display:flex;flex-direction:column;gap:12px}
+  .drop-zone{border:1px dashed var(--border);border-radius:8px;padding:60px 20px;text-align:center;cursor:pointer;background:var(--surface);transition:border-color .2s,background .2s}
+  .drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:#fdf8f4}
+  .drop-icon{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:40px;color:var(--muted);display:block;margin-bottom:8px}
+  .drop-zone strong{font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--accent);font-size:18px;display:block;margin-bottom:4px}
+  .drop-zone p{font-size:10px;color:var(--muted);letter-spacing:1px}
+  #canvasWrap{display:none;background:#000;border-radius:8px;overflow:hidden;border:1px solid var(--border);position:relative}
+  #preview{display:block;width:100%;height:auto;max-height:560px;object-fit:contain}
+  #proc-overlay{display:none;position:absolute;inset:0;background:rgba(247,244,240,.85);align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:28px;color:var(--accent);letter-spacing:3px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  button{font-family:'Space Mono',monospace;font-size:10px;padding:8px 14px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--muted);cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s}
+  button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  button:active:not(:disabled){transform:scale(.97)}
+  button:disabled{opacity:.3;cursor:not-allowed}
+  .btn-accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn-accent:hover:not(:disabled){background:#c9a080;color:#fff;border-color:#c9a080}
+  .btn-rand{border-color:#b08a6e55;color:var(--accent)}
+  .btn-rand:hover:not(:disabled){background:var(--accent);color:#fff}
+  #statusBar{font-size:10px;color:var(--muted);letter-spacing:1px;padding:2px 0;min-height:18px}
+  .presets-block{display:flex;flex-direction:column;gap:8px}
+  .presets-label{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+  .presets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:5px}
+  .preset-btn{font-size:9px;padding:6px 8px;border-radius:3px;border-color:var(--border);color:var(--muted);letter-spacing:1px}
+  .preset-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:transparent}
+  .sidebar{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .sec-head{font-size:9px;letter-spacing:3px;color:var(--accent);padding:10px 14px 6px;border-top:1px solid var(--border);background:var(--bg);text-transform:uppercase}
+  .sec-head:first-child{border-top:none}
+  .param{padding:7px 14px}
+  .param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .param-label{font-size:10px;color:var(--muted);letter-spacing:.5px}
+  .param-val{font-size:10px;color:var(--accent);min-width:38px;text-align:right;font-family:'Space Mono',monospace}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--track);outline:none;cursor:pointer;border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--accent)}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);cursor:pointer}
+  input[type=file]{display:none}
+  .mode-tabs{display:flex;gap:6px;margin-bottom:12px}
+  .mode-tab{font-family:'Space Mono',monospace;font-size:10px;padding:6px 14px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--muted);cursor:pointer;letter-spacing:1px;text-transform:uppercase}
+  .mode-tab.active{border-color:var(--accent);color:var(--accent);background:#fdf8f4}
+  .video-info{font-size:10px;color:var(--muted);letter-spacing:1px;padding:3px 0;min-height:16px}
+  .prog-wrap{background:var(--border);border-radius:2px;height:4px;overflow:hidden;display:none;margin-top:6px}
+  .prog-bar{height:100%;background:var(--accent);width:0%}
+  #videoSrc{display:none;width:100%;max-height:300px;border-radius:8px;background:#000}
+</style>
+</head>
+<body>
+<header>
+  <h1>made for my puppy</h1>
+  <span>soft focus aesthetic engine</span>
+</header>
+<div class="layout">
+  <div class="preview-area">
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tabImg" onclick="switchMode('image')">image</button>
+      <button class="mode-tab" id="tabVid" onclick="switchMode('video')">video</button>
+    </div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileIn').click()">
+      <span class="drop-icon">&#10025;</span>
+      <strong>Drop image here or click to upload</strong>
+      <p>JPG &middot; PNG &middot; WEBP</p>
+    </div>
+    <div id="canvasWrap">
+      <canvas id="preview"></canvas>
+      <div id="proc-overlay">rendering...</div>
+    </div>
+    <video id="videoSrc" muted playsinline></video>
+    <div id="videoInfo" class="video-info"></div>
+    <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+    <div id="statusBar">no image loaded</div>
+    <div class="toolbar">
+      <button id="btnLoadImg" onclick="document.getElementById('fileIn').click()">load image</button>
+      <button id="btnLoadVid" style="display:none" onclick="document.getElementById('videoIn').click()">load video</button>
+      <button class="btn-rand" id="btnRand" disabled onclick="randomize()">randomize</button>
+      <button id="btnUndo" disabled onclick="resetToOriginal()">reset</button>
+      <button class="btn-accent" id="btnApply" disabled onclick="applyEffects()">apply effects</button>
+      <button id="btnExportVid" style="display:none" disabled onclick="exportVideo()">export video</button>
+      <button id="btnDown" disabled onclick="downloadResult()">download</button>
+    </div>
+    <div class="presets-block">
+      <div class="presets-label">Presets</div>
+      <div class="presets-grid" id="presetsGrid"></div>
+    </div>
+  </div>
+  <div class="sidebar" id="sidebar"></div>
+</div>
+<input type="file" id="fileIn" accept="image/*" onchange="loadFile(this)">
+<input type="file" id="videoIn" accept="video/*" onchange="loadVideo(this)">
+
+<script>
+var PARAMS=[
+  {sec:'SOFTNESS'},
+  {id:'gaussBlur',    label:'Gaussian blur',        min:0,   max:20,  step:0.5,  def:4,    fmt:function(v){return v.toFixed(1)}},
+  {id:'ortonBlur',    label:'Orton blur radius',    min:0,   max:40,  step:1,    def:18,   fmt:function(v){return Math.round(v)+''}},
+  {id:'ortonOpacity', label:'Orton blend opacity',  min:0,   max:1.0, step:0.01, def:0.25, fmt:function(v){return v.toFixed(2)}},
+  {id:'ortonMode',    label:'Orton mode (0=screen 1=soft)', min:0, max:1, step:1, def:0,   fmt:function(v){return Math.round(v)===0?'screen':'soft'}},
+  {id:'edgeBlur',     label:'Edge blur spread',     min:0,   max:1.0, step:0.05, def:0.3,  fmt:function(v){return v.toFixed(2)}},
+  {sec:'GLOW & LIGHT'},
+  {id:'bloom',        label:'Bloom strength',       min:0,   max:1.0, step:0.05, def:0.3,  fmt:function(v){return v.toFixed(2)}},
+  {id:'bloomRadius',  label:'Bloom radius',         min:1,   max:30,  step:1,    def:12,   fmt:function(v){return Math.round(v)+''}},
+  {id:'halation',     label:'Halation warmth',      min:0,   max:1.0, step:0.05, def:0.2,  fmt:function(v){return v.toFixed(2)}},
+  {id:'lightLeak',    label:'Light leak intensity', min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {id:'lightLeakHue', label:'Light leak hue',       min:0,   max:360, step:10,   def:30,   fmt:function(v){return Math.round(v)+'deg'}},
+  {id:'exposure',     label:'Exposure lift',        min:-0.5,max:0.8, step:0.05, def:0.1,  fmt:function(v){return v.toFixed(2)}},
+  {sec:'COLOR GRADE'},
+  {id:'saturation',   label:'Saturation',           min:0,   max:1.5, step:0.05, def:0.75, fmt:function(v){return v.toFixed(2)}},
+  {id:'pastelFade',   label:'Pastel fade',          min:0,   max:1.0, step:0.05, def:0.2,  fmt:function(v){return v.toFixed(2)}},
+  {id:'highlightWarm',label:'Highlight warm tint',  min:0,   max:1.0, step:0.05, def:0.15, fmt:function(v){return v.toFixed(2)}},
+  {id:'shadowCool',   label:'Shadow cool tint',     min:0,   max:1.0, step:0.05, def:0.1,  fmt:function(v){return v.toFixed(2)}},
+  {id:'contrastCrush',label:'Contrast crush',       min:0,   max:0.5, step:0.01, def:0.1,  fmt:function(v){return v.toFixed(2)}},
+  {id:'clarity',      label:'Clarity (neg=dreamy)', min:-1.0,max:0,   step:0.05, def:-0.3, fmt:function(v){return v.toFixed(2)}},
+  {sec:'TEXTURE'},
+  {id:'grain',        label:'Film grain',           min:0,   max:40,  step:1,    def:10,   fmt:function(v){return Math.round(v)+''}},
+  {id:'grainSize',    label:'Grain size',           min:1,   max:4,   step:1,    def:1,    fmt:function(v){return Math.round(v)+''}},
+  {id:'haze',         label:'Haze / fog',           min:0,   max:0.5, step:0.01, def:0.05, fmt:function(v){return v.toFixed(2)}},
+  {sec:'FRAME'},
+  {id:'vignette',     label:'Vignette',             min:0,   max:1.0, step:0.05, def:0.35, fmt:function(v){return v.toFixed(2)}},
+  {id:'vignetteWarm', label:'Warm vignette',        min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {id:'borderFade',   label:'Border fade (white)',  min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {sec:'EXTRAS'},
+  {id:'chromaticAb',  label:'Chromatic aberration', min:0,   max:10,  step:0.5,  def:0,    fmt:function(v){return v.toFixed(1)}},
+  {id:'sepiaTone',    label:'Sepia wash',           min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {id:'posterize',    label:'Posterize levels',     min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {id:'glowMist',     label:'Glow mist',            min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {id:'duotoneStr',   label:'Duotone strength',     min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {id:'duotoneHue',   label:'Duotone hue',          min:0,   max:360, step:10,   def:300,  fmt:function(v){return Math.round(v)+'deg'}},
+  {id:'overexp',      label:'Overexpose whites',    min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {sec:'SPECIAL'},
+  {id:'tiltShift',    label:'Tilt-shift blur',      min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {id:'tiltShiftPos', label:'Focus band position',  min:0.1, max:0.9, step:0.05, def:0.5,  fmt:function(v){return v.toFixed(2)}},
+  {id:'tiltShiftW',   label:'Focus band width',     min:0.05,max:0.5, step:0.05, def:0.2,  fmt:function(v){return v.toFixed(2)}},
+  {id:'redscale',     label:'Redscale film',        min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+  {id:'coldChrome',   label:'Cool chrome grade',    min:0,   max:1.0, step:0.05, def:0.0,  fmt:function(v){return v.toFixed(2)}},
+];
+
+var PRESETS={
+  'ethereal':    {gaussBlur:6,  ortonBlur:22,ortonOpacity:0.30,ortonMode:0,edgeBlur:0.40,bloom:0.45,bloomRadius:16,halation:0.30,lightLeak:0.15,lightLeakHue:30, exposure:0.15,saturation:0.65,pastelFade:0.30,highlightWarm:0.25,shadowCool:0.15,contrastCrush:0.15,clarity:-0.40,grain:8, grainSize:1,haze:0.10,vignette:0.40,vignetteWarm:0.20,borderFade:0.10,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.10,duotoneStr:0,   duotoneHue:300,overexp:0.05},
+  'golden hour': {gaussBlur:3,  ortonBlur:16,ortonOpacity:0.20,ortonMode:0,edgeBlur:0.25,bloom:0.35,bloomRadius:14,halation:0.50,lightLeak:0.20,lightLeakHue:20, exposure:0.20,saturation:0.90,pastelFade:0.15,highlightWarm:0.40,shadowCool:0.05,contrastCrush:0.08,clarity:-0.20,grain:14,grainSize:1,haze:0.06,vignette:0.30,vignetteWarm:0.40,borderFade:0.00,chromaticAb:0,  sepiaTone:0.10,posterize:0,   glowMist:0.15,duotoneStr:0,   duotoneHue:30, overexp:0.10},
+  'film soft':   {gaussBlur:2,  ortonBlur:14,ortonOpacity:0.18,ortonMode:1,edgeBlur:0.20,bloom:0.20,bloomRadius:10,halation:0.25,lightLeak:0.00,lightLeakHue:30, exposure:0.05,saturation:0.85,pastelFade:0.10,highlightWarm:0.20,shadowCool:0.10,contrastCrush:0.06,clarity:-0.15,grain:22,grainSize:2,haze:0.03,vignette:0.25,vignetteWarm:0.10,borderFade:0.00,chromaticAb:0.5,sepiaTone:0.05,posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:300,overexp:0.00},
+  'milky':       {gaussBlur:8,  ortonBlur:30,ortonOpacity:0.35,ortonMode:0,edgeBlur:0.50,bloom:0.55,bloomRadius:20,halation:0.15,lightLeak:0.10,lightLeakHue:200,exposure:0.25,saturation:0.50,pastelFade:0.40,highlightWarm:0.10,shadowCool:0.20,contrastCrush:0.20,clarity:-0.50,grain:5, grainSize:1,haze:0.18,vignette:0.20,vignetteWarm:0.00,borderFade:0.20,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.20,duotoneStr:0,   duotoneHue:300,overexp:0.15},
+  'cinematic':   {gaussBlur:1,  ortonBlur:10,ortonOpacity:0.12,ortonMode:1,edgeBlur:0.15,bloom:0.15,bloomRadius:8, halation:0.40,lightLeak:0.00,lightLeakHue:30, exposure:0.00,saturation:0.80,pastelFade:0.05,highlightWarm:0.30,shadowCool:0.25,contrastCrush:0.04,clarity:-0.10,grain:18,grainSize:2,haze:0.02,vignette:0.45,vignetteWarm:0.15,borderFade:0.00,chromaticAb:1.0,sepiaTone:0,   posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:300,overexp:0.00},
+  'haze':        {gaussBlur:7,  ortonBlur:28,ortonOpacity:0.35,ortonMode:0,edgeBlur:0.55,bloom:0.55,bloomRadius:22,halation:0.20,lightLeak:0.25,lightLeakHue:40, exposure:0.25,saturation:0.45,pastelFade:0.40,highlightWarm:0.20,shadowCool:0.05,contrastCrush:0.22,clarity:-0.50,grain:6, grainSize:1,haze:0.25,vignette:0.15,vignetteWarm:0.10,borderFade:0.25,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.30,duotoneStr:0,   duotoneHue:300,overexp:0.20},
+  'portrait':    {gaussBlur:3,  ortonBlur:18,ortonOpacity:0.22,ortonMode:0,edgeBlur:0.30,bloom:0.30,bloomRadius:12,halation:0.20,lightLeak:0.10,lightLeakHue:350,exposure:0.10,saturation:0.70,pastelFade:0.25,highlightWarm:0.20,shadowCool:0.10,contrastCrush:0.10,clarity:-0.25,grain:12,grainSize:1,haze:0.05,vignette:0.40,vignetteWarm:0.15,borderFade:0.05,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.08,duotoneStr:0,   duotoneHue:300,overexp:0.05},
+  'bloom heavy': {gaussBlur:5,  ortonBlur:24,ortonOpacity:0.40,ortonMode:0,edgeBlur:0.40,bloom:0.75,bloomRadius:24,halation:0.35,lightLeak:0.30,lightLeakHue:50, exposure:0.20,saturation:0.60,pastelFade:0.30,highlightWarm:0.35,shadowCool:0.10,contrastCrush:0.15,clarity:-0.40,grain:7, grainSize:1,haze:0.10,vignette:0.30,vignetteWarm:0.25,borderFade:0.10,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.25,duotoneStr:0,   duotoneHue:300,overexp:0.15},
+  'cool dream':  {gaussBlur:5,  ortonBlur:20,ortonOpacity:0.28,ortonMode:0,edgeBlur:0.35,bloom:0.35,bloomRadius:14,halation:0.05,lightLeak:0.15,lightLeakHue:200,exposure:0.10,saturation:0.60,pastelFade:0.30,highlightWarm:0.05,shadowCool:0.35,contrastCrush:0.12,clarity:-0.35,grain:9, grainSize:1,haze:0.08,vignette:0.35,vignetteWarm:0.00,borderFade:0.08,chromaticAb:1.5,sepiaTone:0,   posterize:0,   glowMist:0.10,duotoneStr:0,   duotoneHue:200,overexp:0.05},
+  'vintage':     {gaussBlur:2,  ortonBlur:12,ortonOpacity:0.15,ortonMode:1,edgeBlur:0.20,bloom:0.20,bloomRadius:10,halation:0.45,lightLeak:0.20,lightLeakHue:25, exposure:0.05,saturation:1.00,pastelFade:0.08,highlightWarm:0.35,shadowCool:0.15,contrastCrush:0.06,clarity:-0.12,grain:28,grainSize:2,haze:0.04,vignette:0.50,vignetteWarm:0.30,borderFade:0.00,chromaticAb:1.0,sepiaTone:0.20,posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:30, overexp:0.00},
+  'fairytale':   {gaussBlur:7,  ortonBlur:28,ortonOpacity:0.35,ortonMode:0,edgeBlur:0.50,bloom:0.60,bloomRadius:20,halation:0.15,lightLeak:0.35,lightLeakHue:320,exposure:0.20,saturation:0.55,pastelFade:0.40,highlightWarm:0.15,shadowCool:0.25,contrastCrush:0.20,clarity:-0.50,grain:5, grainSize:1,haze:0.18,vignette:0.20,vignetteWarm:0.05,borderFade:0.22,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.20,duotoneStr:0.15,duotoneHue:300,overexp:0.12},
+  'minimal':     {gaussBlur:1,  ortonBlur:8, ortonOpacity:0.10,ortonMode:0,edgeBlur:0.10,bloom:0.10,bloomRadius:6, halation:0.10,lightLeak:0.00,lightLeakHue:30, exposure:0.00,saturation:0.90,pastelFade:0.05,highlightWarm:0.10,shadowCool:0.05,contrastCrush:0.03,clarity:-0.08,grain:8, grainSize:1,haze:0.02,vignette:0.20,vignetteWarm:0.05,borderFade:0.00,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.02,duotoneStr:0,   duotoneHue:300,overexp:0.00},
+  'moody soft':  {gaussBlur:4,  ortonBlur:20,ortonOpacity:0.20,ortonMode:1,edgeBlur:0.30,bloom:0.25,bloomRadius:12,halation:0.20,lightLeak:0.00,lightLeakHue:30, exposure:-0.1,saturation:0.65,pastelFade:0.15,highlightWarm:0.15,shadowCool:0.30,contrastCrush:0.08,clarity:-0.30,grain:20,grainSize:2,haze:0.05,vignette:0.60,vignetteWarm:0.00,borderFade:0.00,chromaticAb:0.5,sepiaTone:0,   posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:300,overexp:0.00},
+  'surreal':     {gaussBlur:8,  ortonBlur:32,ortonOpacity:0.45,ortonMode:0,edgeBlur:0.60,bloom:0.80,bloomRadius:26,halation:0.40,lightLeak:0.40,lightLeakHue:280,exposure:0.25,saturation:0.40,pastelFade:0.45,highlightWarm:0.25,shadowCool:0.30,contrastCrush:0.25,clarity:-0.60,grain:4, grainSize:1,haze:0.30,vignette:0.10,vignetteWarm:0.10,borderFade:0.30,chromaticAb:2.0,sepiaTone:0,   posterize:0,   glowMist:0.35,duotoneStr:0.20,duotoneHue:270,overexp:0.20},
+  'velvet':      {gaussBlur:4,  ortonBlur:18,ortonOpacity:0.25,ortonMode:1,edgeBlur:0.30,bloom:0.30,bloomRadius:12,halation:0.30,lightLeak:0.10,lightLeakHue:340,exposure:0.05,saturation:0.75,pastelFade:0.20,highlightWarm:0.20,shadowCool:0.15,contrastCrush:0.08,clarity:-0.25,grain:15,grainSize:1,haze:0.06,vignette:0.55,vignetteWarm:0.35,borderFade:0.00,chromaticAb:0,  sepiaTone:0.08,posterize:0,   glowMist:0.12,duotoneStr:0.10,duotoneHue:330,overexp:0.05},
+  'overexposed': {gaussBlur:5,  ortonBlur:20,ortonOpacity:0.30,ortonMode:0,edgeBlur:0.35,bloom:0.50,bloomRadius:18,halation:0.25,lightLeak:0.20,lightLeakHue:40, exposure:0.50,saturation:0.55,pastelFade:0.35,highlightWarm:0.30,shadowCool:0.05,contrastCrush:0.18,clarity:-0.35,grain:6, grainSize:1,haze:0.12,vignette:0.10,vignetteWarm:0.10,borderFade:0.15,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.40,duotoneStr:0,   duotoneHue:300,overexp:0.50},
+  'duotone rose':{gaussBlur:3,  ortonBlur:16,ortonOpacity:0.20,ortonMode:0,edgeBlur:0.25,bloom:0.25,bloomRadius:12,halation:0.10,lightLeak:0.00,lightLeakHue:330,exposure:0.10,saturation:0.30,pastelFade:0.20,highlightWarm:0.15,shadowCool:0.10,contrastCrush:0.10,clarity:-0.20,grain:10,grainSize:1,haze:0.05,vignette:0.35,vignetteWarm:0.10,borderFade:0.05,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.10,duotoneStr:0.65,duotoneHue:340,overexp:0.05},
+  'duotone sky': {gaussBlur:3,  ortonBlur:16,ortonOpacity:0.20,ortonMode:0,edgeBlur:0.25,bloom:0.25,bloomRadius:12,halation:0.05,lightLeak:0.00,lightLeakHue:200,exposure:0.10,saturation:0.25,pastelFade:0.15,highlightWarm:0.05,shadowCool:0.20,contrastCrush:0.08,clarity:-0.18,grain:10,grainSize:1,haze:0.05,vignette:0.35,vignetteWarm:0.00,borderFade:0.05,chromaticAb:1.0,sepiaTone:0,   posterize:0,   glowMist:0.10,duotoneStr:0.65,duotoneHue:200,overexp:0.05},
+  'glitch soft': {gaussBlur:2,  ortonBlur:12,ortonOpacity:0.15,ortonMode:0,edgeBlur:0.20,bloom:0.20,bloomRadius:10,halation:0.10,lightLeak:0.15,lightLeakHue:180,exposure:0.05,saturation:0.80,pastelFade:0.10,highlightWarm:0.10,shadowCool:0.10,contrastCrush:0.05,clarity:-0.15,grain:14,grainSize:1,haze:0.03,vignette:0.25,vignetteWarm:0.00,borderFade:0.00,chromaticAb:8.0,sepiaTone:0,   posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:300,overexp:0.00},
+  'glow mist':   {gaussBlur:6,  ortonBlur:22,ortonOpacity:0.30,ortonMode:0,edgeBlur:0.40,bloom:0.45,bloomRadius:18,halation:0.20,lightLeak:0.10,lightLeakHue:50, exposure:0.20,saturation:0.60,pastelFade:0.30,highlightWarm:0.25,shadowCool:0.10,contrastCrush:0.12,clarity:-0.35,grain:5, grainSize:1,haze:0.08,vignette:0.25,vignetteWarm:0.15,borderFade:0.12,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.70,duotoneStr:0,   duotoneHue:300,overexp:0.25},
+  'sepia dream': {gaussBlur:4,  ortonBlur:18,ortonOpacity:0.22,ortonMode:1,edgeBlur:0.25,bloom:0.25,bloomRadius:12,halation:0.35,lightLeak:0.15,lightLeakHue:25, exposure:0.10,saturation:0.60,pastelFade:0.15,highlightWarm:0.40,shadowCool:0.05,contrastCrush:0.10,clarity:-0.20,grain:20,grainSize:2,haze:0.06,vignette:0.45,vignutteWarm:0.30,borderFade:0.05,chromaticAb:0.5,sepiaTone:0.55,posterize:0,   glowMist:0.10,duotoneStr:0,   duotoneHue:30, overexp:0.05},
+  'posterised':  {gaussBlur:2,  ortonBlur:10,ortonOpacity:0.15,ortonMode:0,edgeBlur:0.15,bloom:0.20,bloomRadius:8, halation:0.10,lightLeak:0.05,lightLeakHue:300,exposure:0.05,saturation:1.10,pastelFade:0.10,highlightWarm:0.10,shadowCool:0.10,contrastCrush:0.05,clarity:-0.10,grain:8, grainSize:1,haze:0.02,vignette:0.30,vignetteWarm:0.10,borderFade:0.00,chromaticAb:1.0,sepiaTone:0,   posterize:0.70,glowMist:0.05,duotoneStr:0,   duotoneHue:300,overexp:0.00,tiltShift:0,tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0},
+
+  // ── NEW PRESETS ──────────────────────────────────────────────
+  'redscale':    {gaussBlur:2,  ortonBlur:12,ortonOpacity:0.15,ortonMode:0,edgeBlur:0.20,bloom:0.25,bloomRadius:10,halation:0.40,lightLeak:0.20,lightLeakHue:20, exposure:0.10,saturation:1.20,pastelFade:0.05,highlightWarm:0.45,shadowCool:0.00,contrastCrush:0.08,clarity:-0.12,grain:22,grainSize:2,haze:0.04,vignette:0.40,vignetteWarm:0.35,borderFade:0.00,chromaticAb:0.5,sepiaTone:0,   posterize:0,   glowMist:0.08,duotoneStr:0,   duotoneHue:30, overexp:0.08,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0.80,coldChrome:0},
+  'wong kar-wai':{gaussBlur:2,  ortonBlur:14,ortonOpacity:0.18,ortonMode:1,edgeBlur:0.20,bloom:0.20,bloomRadius:10,halation:0.15,lightLeak:0.00,lightLeakHue:30, exposure:0.00,saturation:1.10,pastelFade:0.05,highlightWarm:0.35,shadowCool:0.30,contrastCrush:0.05,clarity:-0.12,grain:18,grainSize:2,haze:0.03,vignette:0.40,vignetteWarm:0.10,borderFade:0.00,chromaticAb:0.5,sepiaTone:0,   posterize:0,   glowMist:0.06,duotoneStr:0,   duotoneHue:300,overexp:0.05,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0.55},
+  'infrared':    {gaussBlur:4,  ortonBlur:20,ortonOpacity:0.30,ortonMode:0,edgeBlur:0.35,bloom:0.55,bloomRadius:18,halation:0.20,lightLeak:0.10,lightLeakHue:180,exposure:0.25,saturation:0.30,pastelFade:0.30,highlightWarm:0.00,shadowCool:0.00,contrastCrush:0.15,clarity:-0.30,grain:15,grainSize:1,haze:0.12,vignette:0.30,vignetteWarm:0.00,borderFade:0.08,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.25,duotoneStr:0.50,duotoneHue:200,overexp:0.20,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0.30},
+  'cross process':{gaussBlur:1, ortonBlur:10,ortonOpacity:0.10,ortonMode:0,edgeBlur:0.12,bloom:0.15,bloomRadius:8, halation:0.15,lightLeak:0.10,lightLeakHue:200,exposure:0.10,saturation:1.40,pastelFade:0.00,highlightWarm:0.10,shadowCool:0.25,contrastCrush:0.04,clarity:-0.08,grain:20,grainSize:1,haze:0.02,vignette:0.45,vignetteWarm:0.00,borderFade:0.00,chromaticAb:2.0,sepiaTone:0,   posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:300,overexp:0.05,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0.40},
+  'sofia coppola':{gaussBlur:5, ortonBlur:22,ortonOpacity:0.28,ortonMode:0,edgeBlur:0.38,bloom:0.50,bloomRadius:16,halation:0.15,lightLeak:0.15,lightLeakHue:30, exposure:0.35,saturation:0.60,pastelFade:0.40,highlightWarm:0.20,shadowCool:0.05,contrastCrush:0.20,clarity:-0.40,grain:8, grainSize:1,haze:0.10,vignette:0.15,vignetteWarm:0.10,borderFade:0.18,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.25,duotoneStr:0,   duotoneHue:300,overexp:0.30,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0},
+  'lo-fi lomo':  {gaussBlur:1,  ortonBlur:8, ortonOpacity:0.10,ortonMode:0,edgeBlur:0.15,bloom:0.15,bloomRadius:8, halation:0.20,lightLeak:0.25,lightLeakHue:40, exposure:0.05,saturation:1.35,pastelFade:0.05,highlightWarm:0.25,shadowCool:0.05,contrastCrush:0.04,clarity:-0.08,grain:32,grainSize:2,haze:0.03,vignette:0.60,vignetteWarm:0.20,borderFade:0.00,chromaticAb:1.5,sepiaTone:0,   posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:300,overexp:0.00,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0.20,coldChrome:0},
+  'expired film':{gaussBlur:3,  ortonBlur:14,ortonOpacity:0.16,ortonMode:1,edgeBlur:0.22,bloom:0.20,bloomRadius:10,halation:0.35,lightLeak:0.30,lightLeakHue:25, exposure:0.08,saturation:0.75,pastelFade:0.12,highlightWarm:0.40,shadowCool:0.08,contrastCrush:0.08,clarity:-0.18,grain:35,grainSize:2,haze:0.05,vignette:0.50,vignetteWarm:0.30,borderFade:0.00,chromaticAb:1.0,sepiaTone:0.15,posterize:0,   glowMist:0.06,duotoneStr:0,   duotoneHue:30, overexp:0.05,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0.15,coldChrome:0},
+  'japanese 写真':{gaussBlur:3,  ortonBlur:16,ortonOpacity:0.20,ortonMode:0,edgeBlur:0.25,bloom:0.30,bloomRadius:12,halation:0.20,lightLeak:0.08,lightLeakHue:30, exposure:0.15,saturation:0.80,pastelFade:0.25,highlightWarm:0.20,shadowCool:0.12,contrastCrush:0.10,clarity:-0.22,grain:14,grainSize:1,haze:0.06,vignette:0.30,vignutteWarm:0.10,borderFade:0.06,chromaticAb:0,  sepiaTone:0.08,posterize:0,   glowMist:0.10,duotoneStr:0,   duotoneHue:300,overexp:0.10,tiltShift:0.30,tiltShiftPos:0.5,tiltShiftW:0.25,redscale:0,   coldChrome:0},
+  'morning fog':  {gaussBlur:7,  ortonBlur:26,ortonOpacity:0.32,ortonMode:0,edgeBlur:0.50,bloom:0.50,bloomRadius:20,halation:0.15,lightLeak:0.05,lightLeakHue:30, exposure:0.25,saturation:0.50,pastelFade:0.45,highlightWarm:0.15,shadowCool:0.10,contrastCrush:0.22,clarity:-0.50,grain:5, grainSize:1,haze:0.28,vignette:0.15,vignetteWarm:0.05,borderFade:0.20,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.30,duotoneStr:0,   duotoneHue:300,overexp:0.18,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0.10},
+  'candlelit':   {gaussBlur:4,  ortonBlur:18,ortonOpacity:0.25,ortonMode:0,edgeBlur:0.30,bloom:0.40,bloomRadius:14,halation:0.55,lightLeak:0.25,lightLeakHue:20, exposure:0.10,saturation:0.90,pastelFade:0.10,highlightWarm:0.55,shadowCool:0.00,contrastCrush:0.10,clarity:-0.25,grain:18,grainSize:2,haze:0.06,vignette:0.60,vignetteWarm:0.50,borderFade:0.02,chromaticAb:0,  sepiaTone:0.20,posterize:0,   glowMist:0.18,duotoneStr:0,   duotoneHue:30, overexp:0.12,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0.10,coldChrome:0},
+  'twilight':    {gaussBlur:3,  ortonBlur:16,ortonOpacity:0.20,ortonMode:0,edgeBlur:0.28,bloom:0.35,bloomRadius:14,halation:0.10,lightLeak:0.10,lightLeakHue:270,exposure:-0.05,saturation:0.75,pastelFade:0.20,highlightWarm:0.05,shadowCool:0.40,contrastCrush:0.08,clarity:-0.22,grain:12,grainSize:1,haze:0.06,vignette:0.50,vignetteWarm:0.00,borderFade:0.05,chromaticAb:0.5,sepiaTone:0,   posterize:0,   glowMist:0.12,duotoneStr:0.20,duotoneHue:240,overexp:0.05,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0.20},
+  'tilt-shift':  {gaussBlur:0,  ortonBlur:10,ortonOpacity:0.12,ortonMode:0,edgeBlur:0.10,bloom:0.20,bloomRadius:10,halation:0.15,lightLeak:0.00,lightLeakHue:30, exposure:0.10,saturation:1.05,pastelFade:0.08,highlightWarm:0.15,shadowCool:0.05,contrastCrush:0.05,clarity:-0.10,grain:10,grainSize:1,haze:0.02,vignette:0.25,vignetteWarm:0.05,borderFade:0.00,chromaticAb:0,  sepiaTone:0,   posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:300,overexp:0.05,tiltShift:0.80,tiltShiftPos:0.50,tiltShiftW:0.18,redscale:0,   coldChrome:0},
+  'chrome cool': {gaussBlur:1,  ortonBlur:10,ortonOpacity:0.12,ortonMode:0,edgeBlur:0.12,bloom:0.15,bloomRadius:8, halation:0.05,lightLeak:0.00,lightLeakHue:200,exposure:0.05,saturation:0.70,pastelFade:0.05,highlightWarm:0.00,shadowCool:0.20,contrastCrush:0.04,clarity:-0.08,grain:14,grainSize:1,haze:0.02,vignette:0.35,vignetteWarm:0.00,borderFade:0.00,chromaticAb:1.0,sepiaTone:0,   posterize:0,   glowMist:0.05,duotoneStr:0,   duotoneHue:200,overexp:0.00,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0.80},
+  'pinhole':     {gaussBlur:2,  ortonBlur:20,ortonOpacity:0.25,ortonMode:1,edgeBlur:0.60,bloom:0.30,bloomRadius:14,halation:0.20,lightLeak:0.15,lightLeakHue:30, exposure:0.05,saturation:0.80,pastelFade:0.15,highlightWarm:0.20,shadowCool:0.10,contrastCrush:0.10,clarity:-0.25,grain:28,grainSize:2,haze:0.06,vignette:0.80,vignetteWarm:0.15,borderFade:0.00,chromaticAb:0.5,sepiaTone:0.10,posterize:0,   glowMist:0.10,duotoneStr:0,   duotoneHue:300,overexp:0.06,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0},
+  'bleach dream':{gaussBlur:4,  ortonBlur:18,ortonOpacity:0.22,ortonMode:0,edgeBlur:0.28,bloom:0.35,bloomRadius:14,halation:0.25,lightLeak:0.10,lightLeakHue:30, exposure:0.20,saturation:0.45,pastelFade:0.35,highlightWarm:0.20,shadowCool:0.15,contrastCrush:0.18,clarity:-0.30,grain:22,grainSize:1,haze:0.10,vignette:0.30,vignetteWarm:0.10,borderFade:0.10,chromaticAb:0,  sepiaTone:0.12,posterize:0,   glowMist:0.15,duotoneStr:0,   duotoneHue:300,overexp:0.15,tiltShift:0,   tiltShiftPos:0.5,tiltShiftW:0.2,redscale:0,   coldChrome:0.15},
+};
+
+var vals={};
+var origImageData=null;
+var W=0,H=0;
+var applyTimer=null;
+
+function buildUI(){
+  var sb=document.getElementById('sidebar');
+  sb.innerHTML='';
+  PARAMS.forEach(function(p){
+    if(p.sec){
+      var d=document.createElement('div');
+      d.className='sec-head';
+      d.textContent=p.sec;
+      sb.appendChild(d);
+      return;
+    }
+    vals[p.id]=p.def;
+    var div=document.createElement('div');
+    div.className='param';
+    div.innerHTML='<div class="param-row"><span class="param-label">'+p.label+'</span><span class="param-val" id="vl_'+p.id+'">'+p.fmt(p.def)+'</span></div><input type="range" min="'+p.min+'" max="'+p.max+'" step="'+p.step+'" value="'+p.def+'" id="sl_'+p.id+'">';
+    sb.appendChild(div);
+    (function(pid,pfmt){
+      div.querySelector('input').addEventListener('input',function(){
+        var v=parseFloat(this.value);
+        vals[pid]=v;
+        document.getElementById('vl_'+pid).textContent=pfmt(v);
+        scheduleApply();
+      });
+    })(p.id,p.fmt);
+  });
+
+  var pg=document.getElementById('presetsGrid');
+  pg.innerHTML='';
+  Object.keys(PRESETS).forEach(function(name){
+    var btn=document.createElement('button');
+    btn.className='preset-btn';
+    btn.textContent=name;
+    btn.onclick=function(){applyPreset(name);};
+    pg.appendChild(btn);
+  });
+}
+
+function scheduleApply(){
+  if(!origImageData)return;
+  clearTimeout(applyTimer);
+  applyTimer=setTimeout(function(){applyEffects();},80);
+}
+
+function rnd(min,max,step){
+  var n=Math.round((max-min)/step);
+  return+(min+Math.round(Math.random()*n)*step).toFixed(6);
+}
+
+// Safe randomize ranges — keeps results readable, never a complete blurry mess
+var RAND_RANGES={
+  gaussBlur:   [0,   8  ],
+  ortonBlur:   [8,   24 ],
+  ortonOpacity:[0,   0.35],
+  ortonMode:   [0,   1  ],
+  edgeBlur:    [0,   0.5 ],
+  bloom:       [0,   0.6 ],
+  bloomRadius: [6,   18  ],
+  halation:    [0,   0.45],
+  lightLeak:   [0,   0.3 ],
+  lightLeakHue:[0,   360 ],
+  exposure:    [-0.1,0.4 ],
+  saturation:  [0.5, 1.1 ],
+  pastelFade:  [0,   0.35],
+  highlightWarm:[0,  0.35],
+  shadowCool:  [0,   0.25],
+  contrastCrush:[0,  0.2 ],
+  clarity:     [-0.5,0   ],
+  grain:       [0,   25  ],
+  grainSize:   [1,   2   ],
+  haze:        [0,   0.15],
+  vignette:    [0,   0.55],
+  vignetteWarm:[0,   0.4 ],
+  borderFade:  [0,   0.3 ],
+  chromaticAb: [0,   4.0 ],
+  sepiaTone:   [0,   0.4 ],
+  posterize:   [0,   0.5 ],
+  glowMist:    [0,   0.4 ],
+  duotoneStr:  [0,   0.5 ],
+  duotoneHue:  [0,   360 ],
+  overexp:     [0,   0.3 ],
+  tiltShift:   [0,   0.7 ],
+  tiltShiftPos:[0.2, 0.8 ],
+  tiltShiftW:  [0.1, 0.4 ],
+  redscale:    [0,   0.6 ],
+  coldChrome:  [0,   0.5 ],
+};
+
+function randomize(){
+  PARAMS.forEach(function(p){
+    if(!p.id)return;
+    var range=RAND_RANGES[p.id];
+    var lo=range?range[0]:p.min;
+    var hi=range?range[1]:p.max;
+    var n=Math.round((hi-lo)/p.step);
+    var v=+(lo+Math.round(Math.random()*n)*p.step).toFixed(6);
+    vals[p.id]=v;
+    var sl=document.getElementById('sl_'+p.id);
+    var vl=document.getElementById('vl_'+p.id);
+    if(sl){sl.value=v;vl.textContent=p.fmt(v);}
+  });
+  scheduleApply();
+}
+
+function applyPreset(name){
+  var preset=PRESETS[name];
+  Object.keys(preset).forEach(function(id){
+    var v=preset[id];
+    vals[id]=v;
+    var p=null;for(var i=0;i<PARAMS.length;i++){if(PARAMS[i].id===id){p=PARAMS[i];break;}}
+    var sl=document.getElementById('sl_'+id);
+    var vl=document.getElementById('vl_'+id);
+    if(sl&&p){sl.value=v;vl.textContent=p.fmt(v);}
+  });
+  scheduleApply();
+}
+
+function loadFile(input){
+  var file=input.files[0];
+  if(!file)return;
+  var img=new Image();
+  img.onload=function(){
+    W=img.width;H=img.height;
+    var src=document.createElement('canvas');
+    src.width=W;src.height=H;
+    src.getContext('2d').drawImage(img,0,0);
+    origImageData=src.getContext('2d').getImageData(0,0,W,H);
+    var prev=document.getElementById('preview');
+    prev.width=W;prev.height=H;
+    prev.getContext('2d').putImageData(origImageData,0,0);
+    document.getElementById('dropZone').style.display='none';
+    document.getElementById('canvasWrap').style.display='block';
+    document.getElementById('statusBar').textContent='loaded: '+W+' x '+H+'px';
+    document.getElementById('btnRand').disabled=false;
+    document.getElementById('btnApply').disabled=false;
+    var _bu=document.getElementById('btnUndo');if(_bu)_bu.disabled=false;
+    URL.revokeObjectURL(img.src);
+  };
+  img.onerror=function(){alert('Failed to load image.');};
+  img.src=URL.createObjectURL(file);
+}
+
+function showOverlay(show){
+  document.getElementById('proc-overlay').style.display=show?'flex':'none';
+}
+
+function applyEffects(){
+  if(!origImageData)return;
+  showOverlay(true);
+  setTimeout(function(){
+    try{
+      var result=processDreamy(origImageData,W,H,vals);
+      var prev=document.getElementById('preview');
+      prev.width=W;prev.height=H;
+      prev.getContext('2d').putImageData(result,0,0);
+      document.getElementById('btnDown').disabled=false;
+      document.getElementById('statusBar').textContent='ready \u2014 '+W+'x'+H+'px';
+    }catch(e){
+      document.getElementById('statusBar').textContent='error: '+e.message;
+      console.error(e);
+    }
+    showOverlay(false);
+  },20);
+}
+
+function clamp(v){return v<0?0:v>255?255:Math.round(v);}
+
+// Gaussian blur on ImageData using canvas filter
+var _blurC1=null,_blurX1=null,_blurC2=null,_blurX2=null,_blurW=0,_blurH=0;
+function gaussianBlurCanvas(imageData,W,H,radius){
+  if(radius<=0)return new Uint8ClampedArray(imageData.data);
+  // reuse persistent canvases to avoid GC pressure
+  if(!_blurC1||_blurW!==W||_blurH!==H){
+    _blurC1=document.createElement('canvas');_blurC1.width=W;_blurC1.height=H;_blurX1=_blurC1.getContext('2d');
+    _blurC2=document.createElement('canvas');_blurC2.width=W;_blurC2.height=H;_blurX2=_blurC2.getContext('2d');
+    _blurW=W;_blurH=H;
+  }
+  _blurX1.putImageData(imageData,0,0);
+  _blurX2.filter='blur('+radius+'px)';
+  _blurX2.drawImage(_blurC1,0,0);
+  _blurX2.filter='none';
+  return _blurX2.getImageData(0,0,W,H).data;
+}
+
+// ── FAST VIDEO FRAME PROCESSOR ─────────────────────────────
+// processDreamy() is too heavy for real-time video (8 blur passes + 25 pixel loops).
+// This version uses canvas CSS filter (GPU-accelerated) to approximate the look in 1 draw call.
+function buildVideoFilter(v){
+  var parts=[];
+  // brightness from exposure
+  if(v.exposure!==0){
+    var br=Math.max(0.3,1+v.exposure*1.2);
+    parts.push('brightness('+br.toFixed(2)+')');
+  }
+  // contrast crush -> lower contrast
+  if(v.contrastCrush>0){
+    var con=Math.max(0.3,1-v.contrastCrush*1.5);
+    parts.push('contrast('+con.toFixed(2)+')');
+  }
+  // saturation
+  if(v.saturation!==1.0){
+    parts.push('saturate('+v.saturation.toFixed(2)+')');
+  }
+  // gaussian blur (soft focus)
+  if(v.gaussBlur>0){
+    parts.push('blur('+v.gaussBlur.toFixed(1)+'px)');
+  }
+  // sepia wash
+  if(v.sepiaTone>0){
+    parts.push('sepia('+v.sepiaTone.toFixed(2)+')');
+  }
+  // haze -> brightness up + washed out
+  if(v.haze>0){
+    parts.push('brightness('+(1+v.haze*0.5).toFixed(2)+')');
+    parts.push('contrast('+(1-v.haze*0.4).toFixed(2)+')');
+  }
+  // vignette approximated via a radial overlay drawn after
+  return parts.length>0?parts.join(' '):'none';
+}
+
+function processFrameDreamyFast(srcCanvas){
+  var filter=buildVideoFilter(vals);
+  // draw with CSS filter applied
+  offCtx.filter=filter;
+  offCtx.drawImage(srcCanvas,0,0,W,H);
+  offCtx.filter='none';
+
+  // light leak tint overlay (cheap color cast)
+  if(vals.lightLeak>0){
+    var hue=vals.lightLeakHue||30;
+    var hr=hue/60; var hi=Math.floor(hr)%6;
+    var cols=[[255,80,0],[255,200,0],[0,255,0],[0,200,255],[0,80,255],[200,0,255]];
+    var col=cols[hi];
+    offCtx.globalAlpha=vals.lightLeak*0.25;
+    offCtx.fillStyle='rgb('+col[0]+','+col[1]+','+col[2]+')';
+    // draw gradient from top-left
+    offCtx.fillRect(0,0,W/2,H/2);
+    offCtx.globalAlpha=1;
+  }
+
+  // vignette overlay
+  if(vals.vignette>0){
+    var grad=offCtx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.3,W/2,H/2,Math.max(W,H)*0.8);
+    grad.addColorStop(0,'rgba(0,0,0,0)');
+    grad.addColorStop(1,'rgba(0,0,0,'+Math.min(0.85,vals.vignette*0.9)+')');
+    offCtx.fillStyle=grad;
+    offCtx.fillRect(0,0,W,H);
+  }
+
+  // bloom: screen a blurred copy back (single blur only, cheap)
+  if(vals.bloom>0.05&&_blurC1&&_blurW===W&&_blurH===H){
+    _blurX2.filter='blur('+(vals.bloomRadius||10)+'px)';
+    _blurX2.drawImage(offCanvas,0,0);
+    _blurX2.filter='none';
+    offCtx.globalCompositeOperation='screen';
+    offCtx.globalAlpha=vals.bloom*0.5;
+    offCtx.drawImage(_blurC2,0,0);
+    offCtx.globalCompositeOperation='source-over';
+    offCtx.globalAlpha=1;
+  }
+
+  // grain (fast — just random noise overlay)
+  if(vals.grain>0){
+    var gSize=Math.max(1,Math.round(vals.grainSize||1));
+    var grainAmt=Math.round(vals.grain);
+    var id=offCtx.getImageData(0,0,W,H);
+    var px=id.data;
+    for(var i=0;i<px.length;i+=4){
+      var n=(Math.random()-0.5)*grainAmt*2;
+      px[i]=Math.max(0,Math.min(255,px[i]+n));
+      px[i+1]=Math.max(0,Math.min(255,px[i+1]+n));
+      px[i+2]=Math.max(0,Math.min(255,px[i+2]+n));
+    }
+    offCtx.putImageData(id,0,0);
+  }
+
+  return offCanvas;
+}
+// ── END FAST PROCESSOR ──────────────────────────────────────
+
+
+function processDreamy(imageData,W,H,v){
+  var orig=new Uint8ClampedArray(imageData.data);
+  var px=new Uint8ClampedArray(orig);
+
+  // 1. Exposure lift
+  if(v.exposure!==0){
+    var expMult=Math.pow(2,v.exposure);
+    for(var i=0;i<px.length;i+=4){
+      px[i]  =clamp(px[i]  *expMult);
+      px[i+1]=clamp(px[i+1]*expMult);
+      px[i+2]=clamp(px[i+2]*expMult);
+    }
+  }
+
+  // 2. Contrast crush (lift shadows toward mid gray)
+  if(v.contrastCrush>0){
+    var lift=v.contrastCrush*50;
+    var scale=1-v.contrastCrush*0.6;
+    for(var i=0;i<px.length;i+=4){
+      for(var c=0;c<3;c++) px[i+c]=clamp(px[i+c]*scale+lift);
+    }
+  }
+
+  // 3. Saturation
+  if(v.saturation!==1.0){
+    for(var i=0;i<px.length;i+=4){
+      var g=0.299*px[i]+0.587*px[i+1]+0.114*px[i+2];
+      px[i]  =clamp(g+(px[i]  -g)*v.saturation);
+      px[i+1]=clamp(g+(px[i+1]-g)*v.saturation);
+      px[i+2]=clamp(g+(px[i+2]-g)*v.saturation);
+    }
+  }
+
+  // 4. Pastel fade (blend toward pastel white)
+  if(v.pastelFade>0){
+    for(var i=0;i<px.length;i+=4){
+      px[i]  =clamp(px[i]  +(230-px[i]  )*v.pastelFade*0.5);
+      px[i+1]=clamp(px[i+1]+(228-px[i+1])*v.pastelFade*0.5);
+      px[i+2]=clamp(px[i+2]+(235-px[i+2])*v.pastelFade*0.5);
+    }
+  }
+
+  // 5. Split toning — warm highlights, cool shadows
+  for(var i=0;i<px.length;i+=4){
+    var luma=(px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114)/255;
+    // warm highlights: push red+green up in bright areas
+    if(v.highlightWarm>0){
+      var hw=luma*luma*v.highlightWarm;
+      px[i]  =clamp(px[i]  +hw*30);
+      px[i+1]=clamp(px[i+1]+hw*15);
+      px[i+2]=clamp(px[i+2]-hw*10);
+    }
+    // cool shadows: push blue up in dark areas
+    if(v.shadowCool>0){
+      var sc=(1-luma)*(1-luma)*v.shadowCool;
+      px[i]  =clamp(px[i]  -sc*10);
+      px[i+1]=clamp(px[i+1]-sc*5);
+      px[i+2]=clamp(px[i+2]+sc*25);
+    }
+  }
+
+  // 6. Clarity (negative = dreamy micro-contrast reduction)
+  if(v.clarity<0){
+    var idTmp=new ImageData(W,H);
+    idTmp.data.set(px);
+    var blurredC=gaussianBlurCanvas(idTmp,W,H,4);
+    var cStr=Math.abs(v.clarity)*0.5;
+    for(var i=0;i<px.length;i+=4){
+      for(var c=0;c<3;c++){
+        var diff=px[i+c]-blurredC[i+c];
+        px[i+c]=clamp(px[i+c]-diff*cStr);
+      }
+    }
+  }
+
+  // 7. Main Gaussian blur (soft focus)
+  if(v.gaussBlur>0){
+    var idBlur=new ImageData(W,H);
+    idBlur.data.set(px);
+    var blurred=gaussianBlurCanvas(idBlur,W,H,v.gaussBlur);
+    for(var i=0;i<px.length;i++)px[i]=blurred[i];
+  }
+
+  // 8. Orton effect (blur+screen/soft overlay on highlights)
+  if(v.ortonOpacity>0){
+    var idOrton=new ImageData(W,H);
+    idOrton.data.set(px);
+    var ortonBlurred=gaussianBlurCanvas(idOrton,W,H,v.ortonBlur);
+    var isSoft=Math.round(v.ortonMode)===1;
+    for(var i=0;i<px.length;i+=4){
+      for(var c=0;c<3;c++){
+        var base=px[i+c]/255;
+        var top=ortonBlurred[i+c]/255;
+        var blended;
+        if(isSoft){
+          // soft light
+          if(top<0.5) blended=base-(1-2*top)*base*(1-base);
+          else blended=base+(2*top-1)*(Math.sqrt(base)-base);
+        } else {
+          // screen
+          blended=1-(1-base)*(1-top);
+        }
+        px[i+c]=clamp((base*(1-v.ortonOpacity)+blended*v.ortonOpacity)*255);
+      }
+    }
+  }
+
+  // 9. Bloom (blurred highlights blended back)
+  if(v.bloom>0){
+    var idB=new ImageData(W,H);
+    idB.data.set(px);
+    var bloomBlurred=gaussianBlurCanvas(idB,W,H,v.bloomRadius);
+    for(var i=0;i<px.length;i+=4){
+      var luma=(px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114)/255;
+      var bloomStr=luma*luma*v.bloom;
+      for(var c=0;c<3;c++){
+        var screened=1-(1-px[i+c]/255)*(1-bloomBlurred[i+c]/255);
+        px[i+c]=clamp((px[i+c]/255*(1-bloomStr)+screened*bloomStr)*255);
+      }
+    }
+  }
+
+  // 10. Halation (warm red-orange glow around bright areas)
+  if(v.halation>0){
+    var idH=new ImageData(W,H);
+    idH.data.set(px);
+    var halBlurred=gaussianBlurCanvas(idH,W,H,Math.round(v.bloomRadius*1.5));
+    for(var i=0;i<px.length;i+=4){
+      var luma=(px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114)/255;
+      var halStr=luma*luma*v.halation;
+      px[i]  =clamp(px[i]  +(halBlurred[i]  +30)*halStr*0.6);
+      px[i+1]=clamp(px[i+1]+(halBlurred[i+1]+10)*halStr*0.25);
+      px[i+2]=clamp(px[i+2]-(halBlurred[i+2]   )*halStr*0.3);
+    }
+  }
+
+  // 11. Edge blur (soften edges/corners)
+  if(v.edgeBlur>0){
+    var idE=new ImageData(W,H);
+    idE.data.set(px);
+    var edgeBlurred=gaussianBlurCanvas(idE,W,H,v.gaussBlur+8);
+    var cx=W/2,cy=H/2,maxD=Math.sqrt(cx*cx+cy*cy);
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var idx=(y*W+x)*4;
+        var dx=x-cx,dy=y-cy;
+        var dist=Math.sqrt(dx*dx+dy*dy)/maxD;
+        var edgeAmount=Math.max(0,dist-0.5)*2*v.edgeBlur;
+        edgeAmount=Math.min(1,edgeAmount);
+        for(var c=0;c<3;c++){
+          px[idx+c]=clamp(px[idx+c]*(1-edgeAmount)+edgeBlurred[idx+c]*edgeAmount);
+        }
+      }
+    }
+  }
+
+  // 12. Haze / fog (blend toward light gray/white)
+  if(v.haze>0){
+    for(var i=0;i<px.length;i+=4){
+      px[i]  =clamp(px[i]  +(245-px[i]  )*v.haze);
+      px[i+1]=clamp(px[i+1]+(242-px[i+1])*v.haze);
+      px[i+2]=clamp(px[i+2]+(248-px[i+2])*v.haze);
+    }
+  }
+
+  // 13. Light leak (colored gradient from corner)
+  if(v.lightLeak>0){
+    var hue=v.lightLeakHue;
+    var hr=hue/60;
+    var hi=Math.floor(hr)%6;
+    var hf=hr-Math.floor(hr);
+    var leakR,leakG,leakB;
+    var t=[[255,0,0],[255,255,0],[0,255,0],[0,255,255],[0,0,255],[255,0,255]];
+    leakR=t[hi][0];leakG=t[hi][1];leakB=t[hi][2];
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var idx=(y*W+x)*4;
+        var nx=x/W,ny=y/H;
+        var dist=Math.sqrt(nx*nx+ny*ny)/Math.sqrt(2);
+        var leakStr=(1-dist)*(1-dist)*v.lightLeak*0.7;
+        px[idx]  =clamp(px[idx]  +(leakR-px[idx]  )*leakStr);
+        px[idx+1]=clamp(px[idx+1]+(leakG-px[idx+1])*leakStr);
+        px[idx+2]=clamp(px[idx+2]+(leakB-px[idx+2])*leakStr);
+      }
+    }
+  }
+
+  // 14. Film grain
+  if(v.grain>0){
+    var gs=Math.max(1,Math.round(v.grainSize));
+    for(var y=0;y<H;y+=gs){
+      for(var x=0;x<W;x+=gs){
+        var noise=(Math.random()-0.5)*v.grain*2;
+        for(var gy=y;gy<Math.min(y+gs,H);gy++){
+          for(var gx=x;gx<Math.min(x+gs,W);gx++){
+            var gi=(gy*W+gx)*4;
+            px[gi]  =clamp(px[gi]  +noise);
+            px[gi+1]=clamp(px[gi+1]+noise*0.95);
+            px[gi+2]=clamp(px[gi+2]+noise*1.05);
+          }
+        }
+      }
+    }
+  }
+
+  // 15. Vignette (dark or warm)
+  if(v.vignette>0){
+    var cx=W/2,cy=H/2,maxD=Math.sqrt(cx*cx+cy*cy);
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var idx=(y*W+x)*4;
+        var dx=x-cx,dy=y-cy;
+        var dist=Math.sqrt(dx*dx+dy*dy)/maxD;
+        var fade=1-dist*dist*v.vignette*1.6;
+        var mult=Math.max(0,Math.min(1,fade));
+        if(v.vignetteWarm>0){
+          var dark=1-mult;
+          px[idx]  =clamp(px[idx]  *(mult)+dark*120*v.vignetteWarm);
+          px[idx+1]=clamp(px[idx+1]*(mult)+dark*60 *v.vignetteWarm);
+          px[idx+2]=clamp(px[idx+2]*(mult));
+        } else {
+          px[idx]  =clamp(px[idx]  *mult);
+          px[idx+1]=clamp(px[idx+1]*mult);
+          px[idx+2]=clamp(px[idx+2]*mult);
+        }
+      }
+    }
+  }
+
+  // 16. Border fade (white border melt)
+  if(v.borderFade>0){
+    var bw=Math.round(Math.min(W,H)*0.08);
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var idx=(y*W+x)*4;
+        var edgeDist=Math.min(x,y,W-1-x,H-1-y);
+        if(edgeDist<bw){
+          var t=1-(edgeDist/bw);
+          var fade=t*t*v.borderFade;
+          px[idx]  =clamp(px[idx]  +(255-px[idx]  )*fade);
+          px[idx+1]=clamp(px[idx+1]+(255-px[idx+1])*fade);
+          px[idx+2]=clamp(px[idx+2]+(255-px[idx+2])*fade);
+        }
+      }
+    }
+  }
+
+  // 17. Chromatic aberration (split R/B channels horizontally)
+  if(v.chromaticAb>0){
+    var cab=Math.round(v.chromaticAb);
+    var caShifted=new Uint8ClampedArray(px);
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var i=(y*W+x)*4;
+        var rx=Math.max(0,Math.min(W-1,x-cab));
+        var bx=Math.max(0,Math.min(W-1,x+cab));
+        caShifted[i]  =px[(y*W+rx)*4];
+        caShifted[i+2]=px[(y*W+bx)*4+2];
+      }
+    }
+    px=caShifted;
+  }
+
+  // 18. Sepia wash
+  if(v.sepiaTone>0){
+    for(var i=0;i<px.length;i+=4){
+      var sr=px[i]*0.393+px[i+1]*0.769+px[i+2]*0.189;
+      var sg=px[i]*0.349+px[i+1]*0.686+px[i+2]*0.168;
+      var sb=px[i]*0.272+px[i+1]*0.534+px[i+2]*0.131;
+      px[i]  =clamp(px[i]  *(1-v.sepiaTone)+sr*v.sepiaTone);
+      px[i+1]=clamp(px[i+1]*(1-v.sepiaTone)+sg*v.sepiaTone);
+      px[i+2]=clamp(px[i+2]*(1-v.sepiaTone)+sb*v.sepiaTone);
+    }
+  }
+
+  // 19. Posterize (reduce color levels for painterly feel)
+  if(v.posterize>0){
+    var levels=Math.max(2,Math.round(2+v.posterize*8));
+    var step=255/(levels-1);
+    for(var i=0;i<px.length;i+=4){
+      for(var c=0;c<3;c++){
+        px[i+c]=clamp(Math.round(px[i+c]/step)*step);
+      }
+    }
+  }
+
+  // 20. Glow mist (screen a heavily blurred copy at low opacity)
+  if(v.glowMist>0){
+    var idMist=new ImageData(W,H);
+    idMist.data.set(px);
+    var mistBlur=gaussianBlurCanvas(idMist,W,H,16);
+    for(var i=0;i<px.length;i+=4){
+      for(var c=0;c<3;c++){
+        var base=px[i+c]/255;
+        var top=mistBlur[i+c]/255;
+        var screened=1-(1-base)*(1-top);
+        px[i+c]=clamp((base*(1-v.glowMist)+screened*v.glowMist)*255);
+      }
+    }
+  }
+
+  // 21. Duotone (map to two-color gradient based on luminance)
+  if(v.duotoneStr>0){
+    var dh=v.duotoneHue/60;
+    var dhi=Math.floor(dh)%6;
+    var cols=[[255,80,80],[255,220,80],[80,255,80],[80,220,255],[80,80,255],[255,80,255]];
+    var dr=cols[dhi][0],dg=cols[dhi][1],db=cols[dhi][2];
+    for(var i=0;i<px.length;i+=4){
+      var luma=(px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114)/255;
+      var tr=luma*dr+(1-luma)*20;
+      var tg=luma*dg+(1-luma)*20;
+      var tb=luma*db+(1-luma)*20;
+      px[i]  =clamp(px[i]  *(1-v.duotoneStr)+tr*v.duotoneStr);
+      px[i+1]=clamp(px[i+1]*(1-v.duotoneStr)+tg*v.duotoneStr);
+      px[i+2]=clamp(px[i+2]*(1-v.duotoneStr)+tb*v.duotoneStr);
+    }
+  }
+
+  // 22. Overexpose whites (blow highlights toward white)
+  if(v.overexp>0){
+    for(var i=0;i<px.length;i+=4){
+      var luma=(px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114)/255;
+      var str=luma*luma*luma*v.overexp*2;
+      px[i]  =clamp(px[i]  +(255-px[i]  )*str);
+      px[i+1]=clamp(px[i+1]+(255-px[i+1])*str);
+      px[i+2]=clamp(px[i+2]+(255-px[i+2])*str);
+    }
+  }
+
+
+  // 23. Tilt-shift (radial focus band — blur above and below a horizontal strip)
+  if(v.tiltShift>0){
+    var tsBlurR=Math.round(v.tiltShift*14)+2;
+    var idTs=new ImageData(W,H);idTs.data.set(px);
+    var tsBlur=gaussianBlurCanvas(idTs,W,H,tsBlurR);
+    var focusY=v.tiltShiftPos*H;
+    var bandPx=v.tiltShiftW*H/2;
+    for(var y=0;y<H;y++){
+      var dist=Math.abs(y-focusY);
+      var blend=Math.max(0,Math.min(1,(dist-bandPx)/(bandPx*1.5)));
+      blend=blend*blend*v.tiltShift;
+      for(var x=0;x<W;x++){
+        var idx=(y*W+x)*4;
+        for(var ch=0;ch<3;ch++)px[idx+ch]=clamp(px[idx+ch]*(1-blend)+tsBlur[idx+ch]*blend);
+      }
+    }
+  }
+
+  // 24. Redscale film (channel swap: reds dominate, blues become green-ish)
+  if(v.redscale>0){
+    for(var i=0;i<px.length;i+=4){
+      var origR=px[i],origG=px[i+1],origB=px[i+2];
+      var rsR=clamp(origR*1.4+origG*0.1);
+      var rsG=clamp(origG*0.6+origR*0.3);
+      var rsB=clamp(origB*0.2+origG*0.2);
+      px[i]  =clamp(origR*(1-v.redscale)+rsR*v.redscale);
+      px[i+1]=clamp(origG*(1-v.redscale)+rsG*v.redscale);
+      px[i+2]=clamp(origB*(1-v.redscale)+rsB*v.redscale);
+    }
+  }
+
+  // 25. Cold chrome grade (teal shadows, desaturated mids, cool overall)
+  if(v.coldChrome>0){
+    for(var i=0;i<px.length;i+=4){
+      var luma=(px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114)/255;
+      // teal shift: boost green+blue in shadows, mute in highlights
+      var shadowStr=(1-luma)*(1-luma)*v.coldChrome;
+      var midDeSat=v.coldChrome*0.3;
+      var gray=(px[i]+px[i+1]+px[i+2])/3;
+      px[i]  =clamp(px[i]  *(1-midDeSat)+gray*midDeSat - shadowStr*15);
+      px[i+1]=clamp(px[i+1]*(1-midDeSat)+gray*midDeSat + shadowStr*20);
+      px[i+2]=clamp(px[i+2]*(1-midDeSat)+gray*midDeSat + shadowStr*35);
+    }
+  }
+  var out=new ImageData(W,H);
+  out.data.set(px);
+  return out;
+}
+
+function downloadResult(){
+  var prev=document.getElementById('preview');
+  var a=document.createElement('a');
+  a.download='dreamy-'+Date.now()+'.jpg';
+  a.href=prev.toDataURL('image/jpeg',0.95);
+  a.click();
+}
+
+var dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});
+dz.addEventListener('drop',function(e){
+  e.preventDefault();dz.classList.remove('drag');
+  var f=e.dataTransfer.files[0];
+  if(!f||!f.type.startsWith('image/'))return;
+  var dt=new DataTransfer();dt.items.add(f);
+  var fi=document.getElementById('fileIn');
+  fi.files=dt.files;loadFile(fi);
+});
+
+
+// ══════════════════════════════════════════════════════════════
+// AI CONTEXT BLOCK — READ THIS BEFORE EDITING
+// This file is a self-contained single-page HTML photo+video editor.
+// IMAGE MODE: user uploads image, effects via canvas, sliders auto-apply via scheduleApply().
+// VIDEO MODE: seek-based export — video is PAUSED, currentTime set to frameIdx/fps,
+//   wait for "seeked" event (guarantees decoded frame), draw+process, advance frameIdx.
+//   DO NOT use play+rAF — it gets stuck at 0%. MediaRecorder records offCanvas.captureStream(30fps).
+//   Output: .webm at 12Mbps. Wake Lock keeps mobile screen on during export.
+// KEY VARS: vals, W, H, origImageData, videoEl, offCanvas, liveRAF
+// processDreamy(imageData, W, H, vals) — main effects pipeline, returns ImageData
+// gaussianBlurCanvas(imageData, W, H, radius) — blur helper using canvas filter
+// ══════════════════════════════════════════════════════════════
+var videoMode=false,videoEl=null,offCanvas=null,offCtx=null;
+var frameCanvas=null,frameCtx=null;
+var mediaRecorder=null,recordedChunks=[],exportRunning=false;
+var wakeLock=null,liveRAF=null;
+
+function switchMode(mode){
+  videoMode=(mode==='video');
+  document.getElementById('tabImg').classList.toggle('active',!videoMode);
+  document.getElementById('tabVid').classList.toggle('active',videoMode);
+  document.getElementById('btnLoadImg').style.display=videoMode?'none':'';
+  document.getElementById('btnLoadVid').style.display=videoMode?'':'none';
+  document.getElementById('btnApply').style.display=videoMode?'none':'';
+  document.getElementById('btnExportVid').style.display=videoMode?'':'none';
+  document.getElementById('btnDown').style.display=videoMode?'none':'';
+  document.getElementById('dropZone').style.display=videoMode?'none':'';
+  document.getElementById('canvasWrap').style.display='none';
+  document.getElementById('videoSrc').style.display='none';
+  document.getElementById('videoInfo').textContent='';
+  document.getElementById('statusBar').textContent=videoMode?'no video loaded':'no image loaded';
+  cancelLivePreview();
+}
+
+function loadVideo(input){
+  var file=input.files[0];if(!file)return;
+  videoEl=document.getElementById('videoSrc');
+  videoEl.src=URL.createObjectURL(file);
+  videoEl.style.display='block';
+  videoEl.onloadedmetadata=function(){
+    W=videoEl.videoWidth;H=videoEl.videoHeight;
+    offCanvas=document.createElement('canvas');offCanvas.width=W;offCanvas.height=H;
+    frameCanvas=document.createElement('canvas');frameCanvas.width=W;frameCanvas.height=H;
+    frameCtx=frameCanvas.getContext('2d');
+    offCtx=offCanvas.getContext('2d');
+    document.getElementById('canvasWrap').style.display='block';
+    var prev=document.getElementById('preview');prev.width=W;prev.height=H;
+    document.getElementById('btnRand').disabled=false;
+    document.getElementById('btnExportVid').disabled=false;
+    var _bu=document.getElementById('btnUndo');if(_bu)_bu.disabled=false;
+    var dur=videoEl.duration;
+    document.getElementById('statusBar').textContent=W+'x'+H+' | '+(isFinite(dur)?dur.toFixed(1)+'s':'?');
+    document.getElementById('videoInfo').textContent='live preview active';
+    videoEl.play();startLivePreview();
+  };
+}
+
+function processFrameDreamy(srcCanvas){
+  // Use fast GPU path for video — processDreamy is too heavy for real-time
+  return processFrameDreamyFast(srcCanvas);
+}
+
+function startLivePreview(){
+  cancelLivePreview();
+  if(!videoEl)return;
+  var pCtx=document.getElementById('preview').getContext('2d');
+  var srcC=document.createElement('canvas');srcC.width=W;srcC.height=H;
+  var srcX=srcC.getContext('2d');
+  var lastT=0;
+  // restart video when it ends so preview keeps looping
+  videoEl.onended=function(){videoEl.currentTime=0;videoEl.play();};
+  function tick(ts){
+    if(!videoEl){liveRAF=null;return;}
+    // if paused/ended but not because of export, try to resume
+    if(!exportRunning&&(videoEl.paused||videoEl.ended)){
+      videoEl.play().catch(function(){});
+    }
+    if(ts-lastT>=1000/24){
+      lastT=ts;
+      try{srcX.drawImage(videoEl,0,0);}catch(e){}
+      pCtx.drawImage(processFrameDreamy(srcC),0,0);
+    }
+    liveRAF=requestAnimationFrame(tick);
+  }
+  videoEl.play().catch(function(){});
+  liveRAF=requestAnimationFrame(tick);
+}
+
+function cancelLivePreview(){
+  if(liveRAF){cancelAnimationFrame(liveRAF);liveRAF=null;}
+}
+
+function getBestMimeType(){{
+  // iOS Safari only supports mp4/quicktime for MediaRecorder
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||
+    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if(isIOS||isSafari){{
+    if(MediaRecorder.isTypeSupported('video/mp4;codecs=avc1'))return'video/mp4;codecs=avc1';
+    if(MediaRecorder.isTypeSupported('video/mp4'))return'video/mp4';
+    if(MediaRecorder.isTypeSupported('video/quicktime'))return'video/quicktime';
+  }}
+  if(MediaRecorder.isTypeSupported('video/webm;codecs=vp9'))return'video/webm;codecs=vp9';
+  if(MediaRecorder.isTypeSupported('video/webm'))return'video/webm';
+  return'';
+}}
+
+function buildExportStream(){{
+  // Merge canvas video track + original audio track
+  var videoTrack=offCanvas.captureStream(30).getVideoTracks()[0];
+  var combined=new MediaStream([videoTrack]);
+  try{{
+    var audioTracks=videoEl.captureStream().getAudioTracks();
+    if(audioTracks.length>0)combined.addTrack(audioTracks[0]);
+  }}catch(e){{
+    // some browsers need crossOrigin or don't expose audio — silent fallback
+    console.warn('audio capture unavailable:',e);
+  }}
+  return combined;
+}}
+
+function exportVideo(){
+  if(exportRunning||!videoEl)return;
+  exportRunning=true;
+  cancelLivePreview();
+  document.getElementById('btnExportVid').disabled=true;
+  document.getElementById('btnExportVid').textContent='exporting...';
+  try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(function(wl){wakeLock=wl;}).catch(function(){});}catch(e){}
+
+  var mimeType=getBestMimeType();
+  if(!mimeType){
+    alert('MediaRecorder not supported on this browser/device.');
+    exportRunning=false;
+    document.getElementById('btnExportVid').disabled=false;
+    document.getElementById('btnExportVid').textContent='export video';
+    return;
+  }
+  var stream=buildExportStream();
+  var recOpts={mimeType:mimeType,videoBitsPerSecond:16000000};
+  mediaRecorder=new MediaRecorder(stream,recOpts);
+  recordedChunks=[];
+  mediaRecorder.ondataavailable=function(e){if(e.data.size>0)recordedChunks.push(e.data);};
+  mediaRecorder.onstop=function(){
+    var blobType=mimeType.split(';')[0];
+    var rawBlob=new Blob(recordedChunks,{type:blobType});
+    // If already mp4 (iOS) just download directly, else convert
+    if(blobType==='video/mp4'||blobType==='video/quicktime'){
+      var ext=blobType==='video/quicktime'?'mov':'mp4';
+      var a=document.createElement('a');a.href=URL.createObjectURL(rawBlob);
+      a.download='dreamy-'+Date.now()+'.'+ext;a.click();
+      document.getElementById('videoInfo').textContent='saved! ✓';
+      finishExport();
+    } else {
+      document.getElementById('videoInfo').textContent='converting to mp4...';
+      document.getElementById('progBar').style.width='0%';
+      convertToMp4(rawBlob,'dreamy-'+Date.now()+'.mp4',document.getElementById('videoInfo'),document.getElementById('progBar'),function(){finishExport();});
+    }
+  };
+  function finishExport(){
+    exportRunning=false;
+    videoEl.onended=null;
+    document.getElementById('btnExportVid').disabled=false;
+    document.getElementById('btnExportVid').textContent='export video';
+    document.getElementById('progWrap').style.display='none';
+    document.getElementById('progBar').style.width='0%';
+    if(wakeLock){wakeLock.release();wakeLock=null;}
+    videoEl.currentTime=0;videoEl.play();startLivePreview();
+  }
+  var duration=videoEl.duration;
+  document.getElementById('progWrap').style.display='block';
+  var pCtx=document.getElementById('preview').getContext('2d');
+  mediaRecorder.start(100);
+  videoEl.currentTime=0;
+  videoEl.playbackRate=1.0;
+  var exportRAF=null;
+  function exportTick(){
+    if(!exportRunning)return;
+    if(isFinite(duration)&&duration>0&&videoEl.currentTime>=duration-0.08){
+      cancelAnimationFrame(exportRAF);exportRAF=null;
+      exportRunning=false;mediaRecorder.stop();return;
+    }
+    frameCtx.drawImage(videoEl,0,0);
+    pCtx.drawImage(processFrameDreamy(frameCanvas),0,0);
+    var pct=isFinite(duration)&&duration>0?Math.min(99,(videoEl.currentTime/duration)*100):0;
+    document.getElementById('progBar').style.width=pct.toFixed(1)+'%';
+    document.getElementById('videoInfo').textContent='rendering... '+Math.round(pct)+'%';
+    exportRAF=requestAnimationFrame(exportTick);
+  }
+  videoEl.onended=function(){
+    if(!exportRunning)return;
+    cancelAnimationFrame(exportRAF);exportRAF=null;
+    exportRunning=false;mediaRecorder.stop();
+  };
+  videoEl.play().then(function(){exportRAF=requestAnimationFrame(exportTick);})
+               .catch(function(){exportRAF=requestAnimationFrame(exportTick);});
+}
+
+
+// ── MP4 EXPORT VIA WEBCODECS + MP4-MUXER ───────────────────
+// Uses VideoEncoder (Chrome 94+) + mp4-muxer (pure JS, no headers needed)
+// Falls back to WebM download if WebCodecs unavailable
+
+var mp4MuxerScript = null;
+
+function loadMp4Muxer(cb){
+  if(window.Mp4Muxer){cb();return;}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mp4-muxer@4.4.4/build/mp4-muxer.min.js';
+  s.onload=function(){cb();};
+  s.onerror=function(){cb(new Error('mp4-muxer load failed'));};
+  document.head.appendChild(s);
+}
+
+function convertToMp4(webmBlob, filename, statusEl, progBarEl, onDone){
+  // Check WebCodecs support
+  if(typeof VideoEncoder === 'undefined'){
+    console.warn('VideoEncoder not available — downloading WebM instead');
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(webmBlob);
+    a.download=filename.replace('.mp4','.webm');
+    a.click();
+    if(statusEl) statusEl.textContent='saved as .webm (WebCodecs not supported — use Chrome 94+)';
+    onDone(); return;
+  }
+
+  loadMp4Muxer(function(err){
+    if(err||!window.Mp4Muxer){
+      console.warn('mp4-muxer unavailable — downloading WebM');
+      var a=document.createElement('a');a.href=URL.createObjectURL(webmBlob);
+      a.download=filename.replace('.mp4','.webm');a.click();
+      if(statusEl) statusEl.textContent='saved as .webm (mp4-muxer load failed)';
+      onDone(); return;
+    }
+
+    if(statusEl) statusEl.textContent='converting to mp4...';
+    if(progBarEl) progBarEl.style.width='0%';
+
+    // Decode webm frames using a video element + canvas, then re-encode to H.264
+    var decodeVid = document.createElement('video');
+    decodeVid.muted = true;
+    decodeVid.playsInline = true;
+    decodeVid.src = URL.createObjectURL(webmBlob);
+
+    decodeVid.onloadedmetadata = function(){
+      var vw = decodeVid.videoWidth;
+      var vh = decodeVid.videoHeight;
+      var dur = decodeVid.duration;
+      var fps = 30;
+      var totalFrames = Math.ceil(dur * fps);
+      var frameIdx = 0;
+
+      // Make dimensions even (H.264 requirement)
+      var encW = vw % 2 === 0 ? vw : vw - 1;
+      var encH = vh % 2 === 0 ? vh : vh - 1;
+
+      var muxer = new Mp4Muxer.Muxer({
+        target: new Mp4Muxer.ArrayBufferTarget(),
+        video: { codec:'avc', width:encW, height:encH },
+        fastStart: 'in-memory'
+      });
+
+      var encFinished = false;
+      var encoder = new VideoEncoder({
+        output: function(chunk, meta){
+          muxer.addVideoChunk(chunk, meta);
+        },
+        error: function(e){ console.error('VideoEncoder error', e); }
+      });
+
+      encoder.configure({
+        codec: 'avc1.42001f',
+        width: encW,
+        height: encH,
+        bitrate: 16000000,
+        framerate: fps
+      });
+
+      var decCanvas = document.createElement('canvas');
+      decCanvas.width = encW; decCanvas.height = encH;
+      var decCtx = decCanvas.getContext('2d');
+
+      function encodeNextFrame(){
+        if(frameIdx >= totalFrames){
+          encoder.flush().then(function(){
+            muxer.finalize();
+            var buf = muxer.target.buffer;
+            var blob = new Blob([buf],{type:'video/mp4'});
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(decodeVid.src);
+            if(statusEl) statusEl.textContent = 'saved as ' + filename + ' \u2713';
+            if(progBarEl) progBarEl.style.width = '100%';
+            onDone();
+          });
+          return;
+        }
+        var targetTime = frameIdx / fps;
+        decodeVid.currentTime = targetTime;
+      }
+
+      decodeVid.onseeked = function(){
+        decCtx.drawImage(decodeVid, 0, 0, encW, encH);
+        var keyFrame = (frameIdx % (fps*2) === 0);
+        var timestamp = Math.round((frameIdx / fps) * 1e6);
+        var duration  = Math.round((1 / fps) * 1e6);
+        var frame = new VideoFrame(decCanvas, {timestamp: timestamp, duration: duration});
+        encoder.encode(frame, {keyFrame: keyFrame});
+        frame.close();
+        frameIdx++;
+        var pct = Math.min(99, (frameIdx / totalFrames) * 100);
+        if(progBarEl) progBarEl.style.width = pct.toFixed(1) + '%';
+        if(statusEl) statusEl.textContent = 'converting to mp4... ' + Math.round(pct) + '%';
+        encodeNextFrame();
+      };
+
+      decodeVid.onerror = function(e){
+        console.error('decode error', e);
+        var a=document.createElement('a');a.href=URL.createObjectURL(webmBlob);
+        a.download=filename.replace('.mp4','.webm');a.click();
+        if(statusEl) statusEl.textContent='saved as .webm (decode error)';
+        onDone();
+      };
+
+      encodeNextFrame();
+    };
+
+    decodeVid.onerror = function(){
+      var a=document.createElement('a');a.href=URL.createObjectURL(webmBlob);
+      a.download=filename.replace('.mp4','.webm');a.click();
+      if(statusEl) statusEl.textContent='saved as .webm (video decode failed)';
+      onDone();
+    };
+  });
+}
+// ── END MP4 EXPORT ──────────────────────────────────────────
+
+function resetToOriginal(){
+  PARAMS.forEach(function(p){
+    if(!p.id)return;
+    vals[p.id]=p.def;
+    var sl=document.getElementById('sl_'+p.id);
+    if(sl){sl.value=p.def;document.getElementById('vl_'+p.id).textContent=p.fmt(p.def);}
+  });
+  if(videoMode&&videoEl){
+    startLivePreview();
+  } else if(origImageData){
+    clearTimeout(applyTimer);
+    scheduleApply();
+  }
+}
+buildUI();
+</script>
+</body>
+</html>
